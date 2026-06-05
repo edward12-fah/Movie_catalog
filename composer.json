@@ -1,0 +1,14 @@
+{
+    "name": "edward/movie_catalog",
+    "autoload": {
+        "psr-4": {
+            "Edward\\MovieCatalog\\": ""
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.1"
+    },
+    "require": {
+        "firebase/php-jwt": "^7.0"
+    }
+}

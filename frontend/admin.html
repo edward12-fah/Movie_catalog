@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - IDLIX</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; background-color: #f4f6f9; color: #333; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background-color: #111; color: #fff; display: flex; flex-direction: column; height: 100vh; }
+        .sidebar h2 { color: #E50914; text-align: center; margin: 20px 0; font-weight: 900; letter-spacing: 2px; }
+        .menu-item { padding: 15px 20px; cursor: pointer; transition: 0.3s; font-weight: bold; border-left: 4px solid transparent; }
+        .menu-item:hover, .menu-item.active { background-color: #222; border-left-color: #E50914; color: #E50914; }
+        .logout-btn { margin-top: auto; padding: 15px 20px; background-color: #d32f2f; text-align: center; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        
+        .visit-btn { background-color: #007bff; color: white; padding: 15px; text-align: center; cursor: pointer; font-weight: bold; text-decoration: none; display: block; border-bottom: 1px solid #0056b3; }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .header-action { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { margin: 0; }
+        
+        .search-bar { padding: 8px 15px; border-radius: 20px; border: 1px solid #ccc; width: 300px; outline: none; transition: 0.3s; }
+        .search-bar:focus { border-color: #E50914; box-shadow: 0 0 5px rgba(229, 9, 20, 0.3); }
+
+        /* Form Box (ADD) */
+        .form-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 30px; border-left: 5px solid #28a745; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group.full { grid-column: span 2; }
+        input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
+        
+        .btn-submit { background-color: #28a745; color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 15px; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; margin-bottom: 15px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #111; color: white; }
+        
+        /* Action Buttons */
+        .btn-blue { background-color: #007bff; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 5px; }
+        .btn-edit { background-color: #ffc107; color: black; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 5px; }
+        .btn-delete { background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 40px; }
+        .pagination button { background: #111; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .pagination button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Tabs Logic */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Modals (EDIT & CAST) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 600px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .btn-close { background: #6c757d; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-update { background-color: #ffc107; color: black; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>ADMIN PANEL</h2>
+        <a href="index.html" class="visit-btn" target="_blank">🌐 Kunjungi Situs Web</a>
+        
+        <div class="menu-item active" onclick="switchTab('movies', this)">🎬 Kelola Film</div>
+        <div class="menu-item" onclick="switchTab('genres', this)">🏷️ Kelola Genre</div>
+        <div class="menu-item" onclick="switchTab('actors', this)">🎭 Kelola Aktor</div>
+        <div class="menu-item" onclick="switchTab('reviews', this)">💬 Kelola Ulasan</div>
+        <div class="menu-item" onclick="switchTab('users', this)">👥 Kelola User</div>
+        <div class="logout-btn" onclick="logout()">Keluar</div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="tab-movies" class="tab-content active">
+            <div class="header-action">
+                <h1>Manajemen Film</h1>
+                <input type="text" class="search-bar" placeholder="Cari Judul Film (Enter)..." onkeypress="handleSearch(event, 'movies')">
+            </div>
+            
+            <div class="form-box">
+                <h3>+ Tambah Film Baru</h3>
+                <form onsubmit="addMovie(event)">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Judul Film</label><input type="text" id="add-m-title" required></div>
+                        <div class="input-group"><label>Tahun Rilis</label><input type="number" id="add-m-year" required></div>
+                        <div class="input-group"><label>Genre</label><select id="add-m-genre" class="genre-dropdown" required></select></div>
+                        <div class="input-group"><label>URL Poster (Opsional)</label><input type="url" id="add-m-poster"></div>
+                        <div class="input-group full"><label>Deskripsi</label><textarea id="add-m-desc" rows="2"></textarea></div>
+                    </div>
+                    <button type="submit" class="btn-submit">Simpan Film Baru</button>
+                </form>
+            </div>
+            
+            <table>
+                <thead><tr><th>ID</th><th>Judul Film</th><th>Tahun</th><th>Genre</th><th>Aksi</th></tr></thead>
+                <tbody id="movie-table-body"></tbody>
+            </table>
+            <div class="pagination">
+                <button onclick="changePage('movies', -1)" id="prev-movies">« Prev</button>
+                <span id="info-movies">Hal 1 dari 1</span>
+                <button onclick="changePage('movies', 1)" id="next-movies">Next »</button>
+            </div>
+        </div>
+
+        <div id="tab-genres" class="tab-content">
+            <div class="header-action">
+                <h1>Manajemen Genre</h1>
+                <input type="text" class="search-bar" placeholder="Cari Genre (Enter)..." onkeypress="handleSearch(event, 'genres')">
+            </div>
+            <div class="form-box">
+                <h3>+ Tambah Genre Baru</h3>
+                <form onsubmit="addGenre(event)">
+                    <div class="input-group full"><label>Nama Genre</label><input type="text" id="add-g-name" required></div>
+                    <button type="submit" class="btn-submit">Simpan Genre Baru</button>
+                </form>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Nama Genre</th><th>Aksi</th></tr></thead>
+                <tbody id="genre-table-body"></tbody>
+            </table>
+            <div class="pagination">
+                <button onclick="changePage('genres', -1)" id="prev-genres">« Prev</button>
+                <span id="info-genres">Hal 1 dari 1</span>
+                <button onclick="changePage('genres', 1)" id="next-genres">Next »</button>
+            </div>
+        </div>
+
+        <div id="tab-actors" class="tab-content">
+            <div class="header-action">
+                <h1>Manajemen Aktor</h1>
+                <input type="text" class="search-bar" placeholder="Cari Nama Aktor (Enter)..." onkeypress="handleSearch(event, 'actors')">
+            </div>
+            <div class="form-box">
+                <h3>+ Tambah Aktor Baru</h3>
+                <form onsubmit="addActor(event)">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Nama Aktor</label><input type="text" id="add-a-name" required></div>
+                        <div class="input-group">
+                            <label>Jenis Kelamin</label>
+                            <select id="add-a-gender" required>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Simpan Aktor Baru</button>
+                </form>
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Nama Aktor</th><th>Gender</th><th>Aksi</th></tr></thead>
+                <tbody id="actor-table-body"></tbody>
+            </table>
+            <div class="pagination">
+                <button onclick="changePage('actors', -1)" id="prev-actors">« Prev</button>
+                <span id="info-actors">Hal 1 dari 1</span>
+                <button onclick="changePage('actors', 1)" id="next-actors">Next »</button>
+            </div>
+        </div>
+
+        <div id="tab-reviews" class="tab-content">
+            <div class="header-action">
+                <h1>Manajemen Ulasan User</h1>
+                <input type="text" class="search-bar" placeholder="Cari Film / Nama User (Enter)..." onkeypress="handleSearch(event, 'reviews')">
+            </div>
+            <table>
+                <thead><tr><th>Film</th><th>User</th><th>Rating</th><th>Komentar</th><th>Aksi</th></tr></thead>
+                <tbody id="review-table-body"></tbody>
+            </table>
+            <div class="pagination">
+                <button onclick="changePage('reviews', -1)" id="prev-reviews">« Prev</button>
+                <span id="info-reviews">Hal 1 dari 1</span>
+                <button onclick="changePage('reviews', 1)" id="next-reviews">Next »</button>
+            </div>
+        </div>
+
+        <div id="tab-users" class="tab-content">
+            <div class="header-action">
+                <h1>Manajemen User</h1>
+                <input type="text" class="search-bar" placeholder="Cari Nama User (Enter)..." onkeypress="handleSearch(event, 'users')">
+            </div>
+            <table>
+                <thead><tr><th>ID</th><th>Nama</th><th>Email</th><th>Role</th><th>Aksi</th></tr></thead>
+                <tbody id="user-table-body"></tbody>
+            </table>
+            <div class="pagination">
+                <button onclick="changePage('users', -1)" id="prev-users">« Prev</button>
+                <span id="info-users">Hal 1 dari 1</span>
+                <button onclick="changePage('users', 1)" id="next-users">Next »</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="modal-edit-movie" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Ubah Data Film</h2><button class="btn-close" onclick="closeModal('modal-edit-movie')">X</button></div>
+            <form onsubmit="updateMovie(event)">
+                <input type="hidden" id="edit-m-id">
+                <div class="form-grid">
+                    <div class="input-group"><label>Judul Film</label><input type="text" id="edit-m-title" required></div>
+                    <div class="input-group"><label>Tahun Rilis</label><input type="number" id="edit-m-year" required></div>
+                    <div class="input-group"><label>Genre</label><select id="edit-m-genre" class="genre-dropdown" required></select></div>
+                    <div class="input-group"><label>URL Poster</label><input type="url" id="edit-m-poster"></div>
+                    <div class="input-group full"><label>Deskripsi</label><textarea id="edit-m-desc" rows="3"></textarea></div>
+                </div>
+                <button type="submit" class="btn-update">Perbarui Film</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-edit-genre" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Ubah Genre</h2><button class="btn-close" onclick="closeModal('modal-edit-genre')">X</button></div>
+            <form onsubmit="updateGenre(event)">
+                <input type="hidden" id="edit-g-id">
+                <div class="input-group"><label>Nama Genre</label><input type="text" id="edit-g-name" required></div>
+                <button type="submit" class="btn-update">Perbarui Genre</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-edit-actor" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>Ubah Data Aktor</h2><button class="btn-close" onclick="closeModal('modal-edit-actor')">X</button></div>
+            <form onsubmit="updateActor(event)">
+                <input type="hidden" id="edit-a-id">
+                <div class="form-grid">
+                    <div class="input-group"><label>Nama Aktor</label><input type="text" id="edit-a-name" required></div>
+                    <div class="input-group">
+                        <label>Jenis Kelamin</label>
+                        <select id="edit-a-gender" required>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-update">Perbarui Aktor</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-cast" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2 id="cast-movie-title">Kelola Pemeran</h2><button class="btn-close" onclick="closeModal('modal-cast')">X</button></div>
+            <div class="form-box" style="background:#f9f9f9; border:none; padding:15px; margin-bottom:15px;">
+                <form onsubmit="addCast(event)">
+                    <input type="hidden" id="cast-movie-id">
+                    <div class="form-grid">
+                        <div class="input-group"><label>Pilih Aktor</label><select id="cast-actor-id" required></select></div>
+                        <div class="input-group"><label>Nama Karakter</label><input type="text" id="cast-char-name"></div>
+                    </div>
+                    <button type="submit" class="btn-blue" style="margin-top: 10px;">Tambah</button>
+                </form>
+            </div>
+            <table>
+                <thead><tr><th>Nama Aktor</th><th>Karakter</th><th>Aksi</th></tr></thead>
+                <tbody id="cast-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost/movie_catalog/api/';
+        const token = localStorage.getItem('jwt_token');
+        if (!token || localStorage.getItem('role') !== 'admin') { alert("Akses Ditolak!"); window.location.href = 'index.html'; }
+        const authHeaders = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+        // --- STATE MANAGEMENT UNTUK PAGINATION & SEARCH ---
+        const state = {
+            movies: { page: 1, limit: 10, search: '', totalPages: 1 },
+            genres: { page: 1, limit: 10, search: '', totalPages: 1 },
+            actors: { page: 1, limit: 10, search: '', totalPages: 1 },
+            reviews: { page: 1, limit: 10, search: '', totalPages: 1 },
+            users: { page: 1, limit: 10, search: '', totalPages: 1 }
+        };
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content, .menu-item').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active'); el.classList.add('active');
+            loadTable(tabId);
+        }
+
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+
+        function handleSearch(e, type) {
+            if (e.key === 'Enter') {
+                state[type].search = e.target.value;
+                state[type].page = 1; // Reset ke halaman 1 saat mencari
+                loadTable(type);
+            }
+        }
+
+        function changePage(type, dir) {
+            state[type].page += dir;
+            loadTable(type);
+        }
+
+        function updatePaginationUI(type) {
+            document.getElementById(`info-${type}`).innerText = `Hal ${state[type].page} dari ${state[type].totalPages}`;
+            document.getElementById(`prev-${type}`).disabled = (state[type].page === 1);
+            document.getElementById(`next-${type}`).disabled = (state[type].page === state[type].totalPages || state[type].totalPages === 0);
+        }
+
+        function loadTable(type) {
+            if(type === 'movies') loadMovies();
+            if(type === 'genres') loadGenres();
+            if(type === 'actors') loadActors();
+            if(type === 'reviews') loadReviews();
+            if(type === 'users') loadUsers();
+        }
+
+        // ================== DATA LOADING (GET) ==================
+        async function loadGenresDropdown() {
+            const res = await fetch(`${API_URL}genres.php?limit=100`, { headers: authHeaders });
+            const data = (await res.json()).data;
+            document.querySelectorAll('.genre-dropdown').forEach(select => {
+                select.innerHTML = '<option value="">Pilih Genre...</option>';
+                data.forEach(g => select.innerHTML += `<option value="${g.id}">${g.jenis_genre}</option>`);
+            });
+        }
+
+        async function loadMovies() {
+            const res = await fetch(`${API_URL}movies.php?page=${state.movies.page}&limit=${state.movies.limit}&search=${state.movies.search}`, { headers: authHeaders });
+            const result = await res.json();
+            const tbody = document.getElementById('movie-table-body'); tbody.innerHTML = '';
+            if(result.success && result.data.length > 0) {
+                state.movies.totalPages = result.pagination.total_pages;
+                result.data.forEach(m => {
+                    const mData = encodeURIComponent(JSON.stringify(m));
+                    tbody.innerHTML += `<tr>
+                        <td>${m.id}</td><td><strong>${m.title}</strong></td><td>${m.release_year}</td><td>${m.jenis_genre || '-'}</td>
+                        <td>
+                            <button class="btn-blue" onclick="openCastModal(${m.id}, '${m.title.replace(/'/g, "\\'")}')">👥 Pemeran</button>
+                            <button class="btn-edit" onclick="showEditMovie('${mData}')">✏️ Edit</button>
+                            <button class="btn-delete" onclick="deleteItem('movies', ${m.id})">Hapus</button>
+                        </td></tr>`;
+                });
+            } else { state.movies.totalPages = 1; tbody.innerHTML = '<tr><td colspan="5">Data tidak ditemukan.</td></tr>'; }
+            updatePaginationUI('movies');
+        }
+
+        async function loadGenres() {
+            const res = await fetch(`${API_URL}genres.php?page=${state.genres.page}&limit=${state.genres.limit}&search=${state.genres.search}`, { headers: authHeaders });
+            const result = await res.json();
+            const tbody = document.getElementById('genre-table-body'); tbody.innerHTML = '';
+            if(result.success && result.data.length > 0) {
+                state.genres.totalPages = result.pagination?.total_pages || 1;
+                result.data.forEach(g => {
+                    const gData = encodeURIComponent(JSON.stringify(g));
+                    tbody.innerHTML += `<tr><td>${g.id}</td><td><strong>${g.jenis_genre}</strong></td>
+                        <td><button class="btn-edit" onclick="showEditGenre('${gData}')">✏️ Edit</button>
+                        <button class="btn-delete" onclick="deleteItem('genres', ${g.id})">Hapus</button></td></tr>`;
+                });
+            } else { tbody.innerHTML = '<tr><td colspan="3">Data tidak ditemukan.</td></tr>'; }
+            updatePaginationUI('genres');
+        }
+
+        async function loadActors() {
+            const res = await fetch(`${API_URL}actors.php?page=${state.actors.page}&limit=${state.actors.limit}&search=${state.actors.search}`, { headers: authHeaders });
+            const result = await res.json();
+            const tbody = document.getElementById('actor-table-body'); tbody.innerHTML = '';
+            if(result.success && result.data.length > 0) {
+                state.actors.totalPages = result.pagination.total_pages;
+                result.data.forEach(a => {
+                    const aData = encodeURIComponent(JSON.stringify(a));
+                    tbody.innerHTML += `<tr><td>${a.id}</td><td><strong>${a.actor_name}</strong></td><td>${a.gender}</td>
+                        <td><button class="btn-edit" onclick="showEditActor('${aData}')">✏️ Edit</button>
+                        <button class="btn-delete" onclick="deleteItem('actors', ${a.id})">Hapus</button></td></tr>`;
+                });
+            } else { state.actors.totalPages = 1; tbody.innerHTML = '<tr><td colspan="4">Data tidak ditemukan.</td></tr>'; }
+            updatePaginationUI('actors');
+        }
+
+        async function loadReviews() {
+            const res = await fetch(`${API_URL}ulasan.php?page=${state.reviews.page}&limit=${state.reviews.limit}&search=${state.reviews.search}`, { headers: authHeaders });
+            const result = await res.json();
+            const tbody = document.getElementById('review-table-body'); tbody.innerHTML = '';
+            if(result.success && result.data.length > 0) {
+                state.reviews.totalPages = result.pagination.total_pages;
+                result.data.forEach(r => {
+                    tbody.innerHTML += `<tr><td><strong>${r.movie_title || r.movie_id}</strong></td><td>${r.user_name || r.user_id}</td>
+                        <td style="color:#f5c518">★ ${r.score}</td><td>${r.review}</td>
+                        <td><button class="btn-delete" onclick="deleteItem('ulasan', ${r.id})">Hapus</button></td></tr>`;
+                });
+            } else { state.reviews.totalPages = 1; tbody.innerHTML = '<tr><td colspan="5">Data tidak ditemukan.</td></tr>'; }
+            updatePaginationUI('reviews');
+        }
+
+        async function loadUsers() {
+            const res = await fetch(`${API_URL}users.php?page=${state.users.page}&limit=${state.users.limit}&search=${state.users.search}`, { headers: authHeaders });
+            const result = await res.json();
+            const tbody = document.getElementById('user-table-body'); tbody.innerHTML = '';
+            if(result.success && result.data.length > 0) {
+                state.users.totalPages = result.pagination?.total_pages || 1;
+                result.data.forEach(u => {
+                    tbody.innerHTML += `<tr><td>${u.id}</td><td><strong>${u.name}</strong></td><td>${u.email}</td><td>${u.role}</td>
+                        <td><button class="btn-delete" onclick="deleteItem('users', ${u.id})">Hapus Akun</button></td></tr>`;
+                });
+            } else { tbody.innerHTML = `<tr><td colspan="5">Data tidak ditemukan.</td></tr>`; }
+            updatePaginationUI('users');
+        }
+
+        // ================== ADD & UPDATE LOGIC (MODALS) ==================
+
+        // MOVIE
+        async function addMovie(e) { e.preventDefault(); await saveApi('movies', 'POST', { title: document.getElementById('add-m-title').value, release_year: document.getElementById('add-m-year').value, genre_id: document.getElementById('add-m-genre').value, poster_url: document.getElementById('add-m-poster').value, description: document.getElementById('add-m-desc').value }); e.target.reset(); }
+        function showEditMovie(encodedData) {
+            const m = JSON.parse(decodeURIComponent(encodedData));
+            document.getElementById('edit-m-id').value = m.id; document.getElementById('edit-m-title').value = m.title;
+            document.getElementById('edit-m-year').value = m.release_year; document.getElementById('edit-m-genre').value = m.genre_id;
+            document.getElementById('edit-m-poster').value = m.poster_url || ''; document.getElementById('edit-m-desc').value = m.description || '';
+            openModal('modal-edit-movie');
+        }
+        async function updateMovie(e) { e.preventDefault(); await saveApi('movies', 'PUT', { id: document.getElementById('edit-m-id').value, title: document.getElementById('edit-m-title').value, release_year: document.getElementById('edit-m-year').value, genre_id: document.getElementById('edit-m-genre').value, poster_url: document.getElementById('edit-m-poster').value, description: document.getElementById('edit-m-desc').value }); closeModal('modal-edit-movie'); }
+
+        // GENRE
+        async function addGenre(e) { e.preventDefault(); await saveApi('genres', 'POST', { jenis_genre: document.getElementById('add-g-name').value }); e.target.reset(); loadGenresDropdown(); }
+        function showEditGenre(encodedData) {
+            const g = JSON.parse(decodeURIComponent(encodedData));
+            document.getElementById('edit-g-id').value = g.id; document.getElementById('edit-g-name').value = g.jenis_genre;
+            openModal('modal-edit-genre');
+        }
+        async function updateGenre(e) { e.preventDefault(); await saveApi('genres', 'PUT', { id: document.getElementById('edit-g-id').value, jenis_genre: document.getElementById('edit-g-name').value }); closeModal('modal-edit-genre'); loadGenresDropdown(); }
+
+        // ACTOR (SUDAH DIPERBAIKI SESUAI ENUM DATABASE)
+        async function addActor(e) { e.preventDefault(); await saveApi('actors', 'POST', { actor_name: document.getElementById('add-a-name').value, gender: document.getElementById('add-a-gender').value }); e.target.reset(); }
+        function showEditActor(encodedData) {
+            const a = JSON.parse(decodeURIComponent(encodedData));
+            document.getElementById('edit-a-id').value = a.id; 
+            document.getElementById('edit-a-name').value = a.actor_name;
+            document.getElementById('edit-a-gender').value = a.gender || 'Laki-laki'; // Mencegah error jika kosong
+            openModal('modal-edit-actor');
+        }
+        async function updateActor(e) { e.preventDefault(); await saveApi('actors', 'PUT', { id: document.getElementById('edit-a-id').value, actor_name: document.getElementById('edit-a-name').value, gender: document.getElementById('edit-a-gender').value }); closeModal('modal-edit-actor'); }
+
+        // ================== GENERAL API SAVER (DENGAN ALERT NOTIFIKASI) ==================
+        async function saveApi(endpoint, method, payload) {
+            try {
+                const res = await fetch(`${API_URL}${endpoint}.php`, { method: method, headers: authHeaders, body: JSON.stringify(payload) });
+                const result = await res.json();
+                
+                if (result.success) {
+                    let actionText = method === 'POST' ? "ditambahkan" : "diperbaharui";
+                    alert(`✅ Sukses! Data berhasil ${actionText}.`);
+                    loadTable(endpoint === 'ulasan' ? 'reviews' : endpoint);
+                } else {
+                    alert(`❌ Gagal: ${result.message}`);
+                }
+            } catch (err) { alert("Terjadi kesalahan jaringan."); }
+        }
+
+        async function deleteItem(endpoint, id) {
+            if(confirm("Yakin ingin menghapus data ini secara permanen?")) {
+                try {
+                    const res = await fetch(`${API_URL}${endpoint}.php`, { method: 'DELETE', headers: authHeaders, body: JSON.stringify({id: id}) });
+                    const result = await res.json();
+                    if(result.success) {
+                        alert("✅ Data berhasil dihapus.");
+                        loadTable(endpoint === 'ulasan' ? 'reviews' : endpoint);
+                    } else {
+                        alert(`❌ Gagal menghapus: ${result.message}`);
+                    }
+                } catch (err) { alert("Terjadi kesalahan saat menghapus."); }
+            }
+        }
+
+        // ================== CAST MODAL (PEMERAN) ==================
+        async function openCastModal(movieId, title) {
+            document.getElementById('cast-movie-title').innerText = `Pemeran: ${title}`;
+            document.getElementById('cast-movie-id').value = movieId;
+            
+            // PERBAIKAN: Menambahkan authHeaders agar API tidak menolak request (Error 401)
+            const resA = await fetch(`${API_URL}actors.php?limit=5000`, { headers: authHeaders });
+            const resultA = await resA.json();
+            
+            const select = document.getElementById('cast-actor-id'); 
+            select.innerHTML = '<option value="">Pilih Aktor...</option>';
+            if(resultA.success) {
+                resultA.data.forEach(a => select.innerHTML += `<option value="${a.id}">${a.actor_name}</option>`);
+            }
+            
+            loadCastList(movieId); 
+            openModal('modal-cast');
+        }
+        
+        async function loadCastList(movieId) {
+            const res = await fetch(`${API_URL}movie_actors.php?movie_id=${movieId}`, { headers: authHeaders });
+            const tbody = document.getElementById('cast-table-body'); tbody.innerHTML = '';
+            const result = await res.json();
+            if(result.data && result.data.length > 0) {
+                result.data.forEach(c => tbody.innerHTML += `<tr><td>${c.actor_name}</td><td>${c.character_name || '-'}</td><td><button class="btn-delete" onclick="removeCast(${c.id}, ${movieId})">Hapus</button></td></tr>`);
+            } else tbody.innerHTML = '<tr><td colspan="3">Belum ada pemeran.</td></tr>';
+        }
+
+        async function addCast(e) {
+            e.preventDefault();
+            const mId = document.getElementById('cast-movie-id').value;
+            
+            const res = await fetch(`${API_URL}movie_actors.php`, { 
+                method: 'POST', 
+                headers: authHeaders, 
+                body: JSON.stringify({ 
+                    movie_id: mId, 
+                    actor_id: document.getElementById('cast-actor-id').value, 
+                    character_name: document.getElementById('cast-char-name').value 
+                }) 
+            });
+            const result = await res.json();
+            
+            if(result.success) {
+                alert("✅ Pemeran berhasil ditambahkan!");
+                loadCastList(mId); 
+                document.getElementById('cast-char-name').value = '';
+            } else {
+                alert(`❌ Gagal: ${result.message}`);
+            }
+        }
+
+        async function removeCast(id, movieId) { 
+            if(confirm("Hapus aktor ini dari film?")) {
+                const res = await fetch(`${API_URL}movie_actors.php`, { method: 'DELETE', headers: authHeaders, body: JSON.stringify({id: id}) }); 
+                const result = await res.json();
+                if(result.success) {
+                    alert("✅ Pemeran berhasil dihapus!");
+                    loadCastList(movieId);
+                }
+            }
+        }
+
+        // INIT
+        loadGenresDropdown();
+        loadMovies();
+    </script>
+</body>
+</html>

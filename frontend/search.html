@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - CineX</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d0d0c; color: #fff; margin: 0; }
+        
+        /* Navbar Terpadu */
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; background-color: rgba(17, 17, 17, 0.9); backdrop-filter: blur(10px); position: fixed; width: 100%; top: 0; z-index: 1000; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-left { display: flex; align-items: center; gap: 40px; }
+        .navbar h1 { color: #E50914; margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 1.5px; cursor: pointer; }
+        .nav-links { display: flex; gap: 20px; }
+        .nav-links a { color: #ccc; text-decoration: none; font-weight: bold; transition: 0.3s; font-size: 15px; }
+        .nav-links a:hover, .nav-links a.active { color: #E50914; }
+        
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+        .search-box { padding: 8px 15px; border-radius: 20px; border: 1px solid #444; background-color: #222; color: white; outline: none; width: 220px; transition: 0.3s; font-size: 14px; }
+        .search-box:focus { border-color: #E50914; width: 260px; }
+        .btn-logout { background: transparent; color: white; border: 1px solid #555; padding: 6px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: 0.3s; }
+        .btn-logout:hover { background: #E50914; border-color: #E50914; }
+
+        /* Container */
+        .container { padding: 40px; max-width: 1200px; margin: 80px auto 0 auto; }
+        .btn-back { display: inline-flex; align-items: center; color: #aaa; background: none; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 20px; padding: 0; transition: 0.3s; }
+        .btn-back:hover { color: #fff; transform: translateX(-5px); }
+        .page-title { font-size: 24px; font-weight: bold; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        
+        /* Grid */
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .movie-card { position: relative; border-radius: 8px; overflow: hidden; cursor: pointer; aspect-ratio: 2/3; background-color: #1a1a1a; transition: transform 0.3s; }
+        .movie-card img { width: 100%; height: 100%; object-fit: cover; }
+        .movie-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        
+        /* Grid Aktor */
+        .actor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 30px; text-align: center; }
+        .actor-card { cursor: pointer; transition: 0.3s; padding: 10px; border-radius: 10px; }
+        .actor-card:hover { background-color: #1a1a1a; transform: translateY(-5px); }
+        .actor-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #333; margin-bottom: 15px; }
+        .actor-name { font-size: 16px; font-weight: bold; color: #eee; }
+
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 50px; }
+        .btn-page { background: #222; color: white; border: 1px solid #444; padding: 10px 20px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        .btn-page:hover:not(:disabled) { background: #E50914; }
+        .btn-page:disabled { opacity: 0.3; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-left">
+            <h1 onclick="window.location.href='index.html'">CineX</h1>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="genres.html">Genres</a>
+                <a href="year.html">Year</a>
+                <a href="actors.html">Actors</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <input type="text" class="search-box" id="search-input" placeholder="Cari judul film..." onkeypress="handleSearch(event)">
+            <span id="user-greeting" style="font-size: 14px; font-weight: 600; color: #ccc;"></span>
+            <button class="btn-logout" onclick="logout()">Keluar</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <button class="btn-back" onclick="history.back()">← Kembali</button>
+        <div class="page-title" id="result-title">Hasil Pencarian</div>
+        <div id="result-list" class="movie-grid">Memuat data...</div>
+
+        <div class="pagination" id="pagination-controls" style="display: none;">
+            <button class="btn-page" id="btn-prev" onclick="changePage(-1)">« Sebelumnya</button>
+            <span id="page-info" style="font-weight: bold; color: #aaa;">Halaman 1</span>
+            <button class="btn-page" id="btn-next" onclick="changePage(1)">Selanjutnya »</button>
+        </div>
+    </div>
+
+    <script>
+        const API_MOVIES = 'http://localhost/movie_catalog/api/movies.php';
+        const API_ACTORS = 'http://localhost/movie_catalog/api/actors.php';
+        const token = localStorage.getItem('jwt_token');
+        if (!token) window.location.href = 'login.html';
+        document.getElementById('user-greeting').innerText = `Hi, ${localStorage.getItem('name')}`;
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        function handleSearch(e) {
+            if (e.key === 'Enter') {
+                const query = document.getElementById('search-input').value;
+                if(query) window.location.href = `search.html?q=${query}`;
+            }
+        }
+        function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+        async function fetchResults() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const container = document.getElementById('result-list');
+            
+            // --- JIKA MENCARI AKTOR ---
+            if (urlParams.get('search_actor')) {
+                const qActor = urlParams.get('search_actor');
+                document.getElementById('result-title').innerText = `Hasil pencarian aktor: "${qActor}"`;
+                const res = await fetch(`${API_ACTORS}?search=${qActor}&page=${currentPage}`, { headers: {'Authorization': 'Bearer ' + token} });
+                const result = await res.json();
+                
+                container.className = "actor-grid";
+                container.innerHTML = '';
+                result.data.forEach(a => {
+                    container.innerHTML += `
+                        <div class="actor-card" onclick="window.location.href='search.html?actor_id=${a.id}&actor_name=${encodeURI(a.actor_name)}'">
+                            <img class="actor-img" src="https://ui-avatars.com/api/?name=${encodeURI(a.actor_name)}&background=random">
+                            <div class="actor-name">${a.actor_name}</div>
+                        </div>`;
+                });
+                updatePaginationUI(result.pagination.total_pages);
+            } 
+            // --- JIKA MENCARI FILM / FILTER ---
+            else {
+                let apiUrl = `${API_MOVIES}?page=${currentPage}&limit=12`;
+                let titleText = "Katalog Film";
+
+                if (urlParams.get('q')) apiUrl += `&search=${urlParams.get('q')}`;
+                if (urlParams.get('genre_id')) apiUrl += `&genre_id=${urlParams.get('genre_id')}`;
+                if (urlParams.get('year')) apiUrl += `&year=${urlParams.get('year')}`;
+                if (urlParams.get('actor_id')) apiUrl += `&actor_id=${urlParams.get('actor_id')}`;
+
+                if (urlParams.get('actor_name')) titleText = `Film dibintangi: ${urlParams.get('actor_name')}`;
+                document.getElementById('result-title').innerText = titleText;
+
+                const res = await fetch(apiUrl, { headers: {'Authorization': 'Bearer ' + token} });
+                const result = await res.json();
+                container.className = "movie-grid";
+                container.innerHTML = '';
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(m => {
+                        container.innerHTML += `
+                            <div class="movie-card" onclick="window.location.href='detail.html?id=${m.id}'">
+                                <img src="${m.poster_url || 'https://via.placeholder.com/300x450'}">
+                            </div>`;
+                    });
+                    updatePaginationUI(result.pagination.total_pages);
+                } else {
+                    container.innerHTML = "Tidak ada hasil.";
+                    document.getElementById('pagination-controls').style.display = 'none';
+                }
+            }
+        }
+
+        function updatePaginationUI(total) {
+            totalPages = total;
+            document.getElementById('pagination-controls').style.display = 'flex';
+            document.getElementById('page-info').innerText = `Halaman ${currentPage} dari ${totalPages}`;
+            document.getElementById('btn-prev').disabled = (currentPage === 1);
+            document.getElementById('btn-next').disabled = (currentPage >= totalPages);
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            fetchResults();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        fetchResults();
+    </script>
+</body>
+</html>

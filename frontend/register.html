@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - CineX</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #000; color: #fff; height: 100vh; overflow: hidden; position: relative; }
+        
+        /* Background Gambar Film Redup */
+        .bg-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.5; z-index: 1; filter: grayscale(50%); }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.9) 100%); z-index: 2; }
+        
+        /* Logo IDLIX di Kiri Atas */
+        .logo { position: absolute; top: 20px; left: 40px; font-size: 36px; font-weight: 900; color: #E50914; margin: 0; z-index: 10; letter-spacing: 2px; cursor: pointer; }
+        
+        /* Kotak Form Registrasi */
+        .login-wrapper { position: relative; z-index: 10; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background-color: rgba(0, 0, 0, 0.8); padding: 50px 68px; border-radius: 4px; width: 100%; max-width: 340px; box-sizing: content-box; border: 1px solid rgba(255,255,255,0.1); }
+        
+        h2 { margin: 0 0 28px 0; font-size: 32px; font-weight: 700; }
+        
+        .input-group { margin-bottom: 16px; }
+        .input-group input { width: 100%; padding: 16px 20px; border-radius: 4px; border: none; background: #333; color: #fff; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        .input-group input:focus { background: #444; border-left: 3px solid #E50914; }
+        
+        .btn-submit { width: 100%; padding: 16px; background-color: #E50914; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; transition: 0.2s; }
+        .btn-submit:hover { background-color: #c10711; }
+        
+        .form-footer { margin-top: 30px; color: #737373; font-size: 16px; }
+        .form-footer a { color: #fff; text-decoration: none; font-weight: 500; transition: 0.2s; }
+        .form-footer a:hover { text-decoration: underline; }
+        
+        /* Alert Messages */
+        .error-msg { color: #e87c03; font-size: 14px; margin-bottom: 15px; background: rgba(232, 124, 3, 0.1); padding: 10px; border-left: 3px solid #e87c03; display: none; }
+        .success-msg { color: #46d369; font-size: 14px; margin-bottom: 15px; background: rgba(70, 211, 105, 0.1); padding: 10px; border-left: 3px solid #46d369; display: none; }
+    </style>
+</head>
+<body>
+
+    <img src="https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2069&auto=format&fit=crop" class="bg-image" alt="Background">
+    <div class="overlay"></div>
+
+    <h1 class="logo" onclick="window.location.href='index.html'">CineX</h1>
+
+    <div class="login-wrapper">
+        <div class="login-box">
+            <h2>Sign Up</h2>
+            
+            <div id="error-msg" class="error-msg"></div>
+            <div id="success-msg" class="success-msg"></div>
+
+            <div class="input-group">
+                <input type="text" id="name" placeholder="Full Name" required>
+            </div>
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Email address (@email.com)" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Create Password" required>
+            </div>
+            <div class="input-group">
+                <input type="password" id="confirm-password" placeholder="Confirm Password" required>
+            </div>
+            
+            <button class="btn-submit" id="btn-register" onclick="register()">Create Account</button>
+            
+            <div class="form-footer">
+                <p>Already have an account? <a href="login.html">Sign in.</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cek apakah user sudah login, jika iya lempar kembali ke halaman utama
+        if (localStorage.getItem('jwt_token')) {
+            window.location.href = 'index.html';
+        }
+
+        async function register() {
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            const errorBox = document.getElementById('error-msg');
+            const successBox = document.getElementById('success-msg');
+            const btn = document.getElementById('btn-register');
+
+            // Reset pesan
+            errorBox.style.display = 'none';
+            successBox.style.display = 'none';
+
+            // 1. Validasi Input Kosong
+            if(!name || !email || !password || !confirmPassword) {
+                errorBox.style.display = 'block';
+                errorBox.innerText = "Semua kolom wajib diisi!";
+                return;
+            }
+
+            // 2. Validasi Domain Email (@email.com)
+            if(!email.toLowerCase().endsWith("@email.com")) {
+                errorBox.style.display = 'block';
+                errorBox.innerText = "Hanya email dengan domain @email.com yang diizinkan!";
+                return;
+            }
+
+            // 3. Validasi Kecocokan Password
+            if(password !== confirmPassword) {
+                errorBox.style.display = 'block';
+                errorBox.innerText = "Password tidak cocok!";
+                return;
+            }
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // Memanggil API Backend
+                const res = await fetch('http://localhost/movie_catalog/api/register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    successBox.style.display = 'block';
+                    successBox.innerText = result.message;
+                    
+                    // Lempar ke halaman login setelah 2 detik
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    errorBox.style.display = 'block';
+                    errorBox.innerText = result.message;
+                    btn.innerText = "Create Account";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                errorBox.style.display = 'block';
+                errorBox.innerText = "Gagal terhubung ke API Server.";
+                btn.innerText = "Create Account";
+                btn.disabled = false;
+            }
+        }
+
+        // Jalankan pendaftaran saat menekan tombol Enter
+        document.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") register();
+        });
+    </script>
+</body>
+</html>
