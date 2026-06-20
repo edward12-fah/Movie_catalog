@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive API Documentation - CineX</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d0d0c; color: #e0e0e0; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Navigation */
+        .sidebar { width: 280px; background-color: #111; padding: 20px 0; border-right: 1px solid #333; overflow-y: auto; flex-shrink: 0; }
+        .sidebar h2 { color: #E50914; text-align: center; margin-bottom: 30px; letter-spacing: 2px; font-weight: 900; cursor: pointer; }
+        .nav-group { margin-bottom: 25px; }
+        .nav-group-title { font-size: 13px; color: #888; text-transform: uppercase; padding: 0 20px; margin-bottom: 10px; font-weight: bold; letter-spacing: 1px; }
+        .nav-item { display: block; padding: 10px 20px; color: #ccc; text-decoration: none; font-size: 14px; transition: 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { background-color: #222; color: #fff; border-left-color: #E50914; }
+
+        /* Main Content Area */
+        .content { flex: 1; padding: 40px 60px; overflow-y: auto; background-color: #0a0a0a; scroll-behavior: smooth; }
+        .content h1 { border-bottom: 2px solid #333; padding-bottom: 15px; margin-top: 0; color: #fff; font-size: 32px; }
+        
+        .global-auth { background: #161614; border: 1px solid #333; padding: 20px; border-radius: 6px; margin-bottom: 40px; }
+        .global-auth label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #aaa; }
+        .global-auth input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-family: monospace; box-sizing: border-box; }
+
+        /* Endpoint Section */
+        .endpoint { background-color: #151515; border: 1px solid #333; border-radius: 8px; margin-bottom: 40px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .endpoint-header { display: flex; align-items: center; padding: 15px 20px; background-color: #1a1a1a; border-bottom: 1px solid #333; }
+        
+        /* Method Badges */
+        .method { padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; margin-right: 15px; color: #fff; letter-spacing: 1px; min-width: 60px; text-align: center; }
+        .method.get { background-color: #28a745; }
+        .method.post { background-color: #007bff; }
+        .method.put { background-color: #ffc107; color: #000; }
+        .method.delete { background-color: #dc3545; }
+        
+        .url { font-family: 'Courier New', Courier, monospace; font-size: 16px; color: #fff; font-weight: bold; }
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: auto; }
+        .badge.auth { background-color: #ff5722; color: white; }
+        .badge.admin { background-color: #9c27b0; color: white; margin-left: 10px; }
+        
+        .endpoint-body { padding: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        @media(max-width: 1000px) { .endpoint-body { grid-template-columns: 1fr; } }
+        
+        .panel-left h4, .panel-right h4 { margin-top: 0; color: #fff; font-size: 14px; text-transform: uppercase; border-bottom: 1px solid #333; padding-bottom: 8px; margin-bottom: 15px; letter-spacing: 1px; }
+        
+        /* Interactive Form */
+        .sandbox-form { display: flex; flex-direction: column; gap: 12px; background: #111; padding: 15px; border-radius: 6px; border: 1px solid #222; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 13px; color: #aaa; font-weight: 600; }
+        .form-group input, .form-group textarea, .form-group select { padding: 8px 12px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; outline: none; font-size: 14px; }
+        .form-group input:focus { border-color: #E50914; }
+        
+        .btn-test { background: #E50914; color: white; border: none; padding: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        .btn-test:hover { background: #b80710; }
+
+        /* Code Blocks & Response Box */
+        pre { background-color: #000; padding: 15px; border-radius: 6px; overflow-x: auto; border: 1px solid #222; margin: 0; height: 300px; box-sizing: border-box; }
+        code { font-family: 'Courier New', Courier, monospace; color: #50fa7b; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2 onclick="window.location.href='index.html'">CineX API</h2>
+        
+        <div class="nav-group">
+            <div class="nav-group-title">Autentikasi</div>
+            <a href="#auth-login" class="nav-item">POST Login</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Movies (Film)</div>
+            <a href="#movies-get-all" class="nav-item">GET Semua Film</a>
+            <a href="#movies-get-id" class="nav-item">GET Film by ID</a>
+            <a href="#movies-post" class="nav-item">POST Film</a>
+            <a href="#movies-put" class="nav-item">PUT Film</a>
+            <a href="#movies-delete" class="nav-item">DELETE Film</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Genres (Kategori)</div>
+            <a href="#genres-get-all" class="nav-item">GET Semua Genre</a>
+            <a href="#genres-get-id" class="nav-item">GET Genre by ID</a>
+            <a href="#genres-post" class="nav-item">POST Genre</a>
+            <a href="#genres-put" class="nav-item">PUT Genre</a>
+            <a href="#genres-delete" class="nav-item">DELETE Genre</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Actors (Aktor)</div>
+            <a href="#actors-get-all" class="nav-item">GET Semua Aktor</a>
+            <a href="#actors-get-id" class="nav-item">GET Aktor by ID</a>
+            <a href="#actors-post" class="nav-item">POST Aktor</a>
+            <a href="#actors-put" class="nav-item">PUT Aktor</a>
+            <a href="#actors-delete" class="nav-item">DELETE Aktor</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Casting (Pemeran)</div>
+            <a href="#cast-get-all" class="nav-item">GET Pemeran Film</a>
+            <a href="#cast-get-id" class="nav-item">GET Pemeran by ID</a>
+            <a href="#cast-post" class="nav-item">POST Pemeran</a>
+            <a href="#cast-put" class="nav-item">PUT Pemeran</a>
+            <a href="#cast-delete" class="nav-item">DELETE Pemeran</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Reviews (Ulasan)</div>
+            <a href="#reviews-get-all" class="nav-item">GET Semua Ulasan</a>
+            <a href="#reviews-get-id" class="nav-item">GET Ulasan by ID</a>
+            <a href="#reviews-post" class="nav-item">POST Ulasan</a>
+            <a href="#reviews-put" class="nav-item">PUT Ulasan</a>
+            <a href="#reviews-delete" class="nav-item">DELETE Ulasan</a>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group-title">Users (Pengguna)</div>
+            <a href="#users-get-all" class="nav-item">GET Semua User</a>
+            <a href="#users-get-id" class="nav-item">GET User by ID</a>
+            <a href="#users-post" class="nav-item">POST User</a>
+            <a href="#users-put" class="nav-item">PUT User</a>
+            <a href="#users-delete" class="nav-item">DELETE User</a>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1>Dokumentasi & Konsol API</h1>
+        <p style="color: #aaa; margin-bottom: 30px;">Konsol interaktif pengujian *backend* secara langsung dari browser.</p>
+        
+        <div class="global-auth">
+            <label>🔑 Global Bearer Token:</label>
+            <input type="text" id="global-token" placeholder="Login untuk mendapatkan token secara otomatis...">
+        </div>
+
+        <div class="endpoint" id="auth-login">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/login.php</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'login.php', 'POST', false, 'box-login')">
+                        <div class="form-group"><label>Email</label><input type="text" data-key="email" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" data-key="password" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-login"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">1. Movies (Film)</h2>
+        <div class="endpoint" id="movies-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/movies.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movies.php', 'GET', true, 'box-m-get-all')">
+                        <div class="form-group"><label>Page</label><input type="number" data-key="page" value="1"></div>
+                        <div class="form-group"><label>Limit</label><input type="number" data-key="limit" value="10"></div>
+                        <div class="form-group"><label>Search Judul</label><input type="text" data-key="search"></div>
+                        <div class="form-group"><label>Genre ID</label><input type="number" data-key="genre_id"></div>
+                        <div class="form-group"><label>Tahun Rilis</label><input type="number" data-key="year"></div>
+                        <div class="form-group"><label>Actor ID</label><input type="number" data-key="actor_id"></div>
+                        <div class="form-group"><label>Sort (rating)</label><input type="text" data-key="sort" placeholder="Ketik 'rating'"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-m-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="movies-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/movies.php?id={id}</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movies.php', 'GET', true, 'box-m-get-id')">
+                        <div class="form-group"><label>ID Film</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-m-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="movies-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/movies.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movies.php', 'POST', true, 'box-m-post')">
+                        <div class="form-group"><label>Judul</label><input type="text" data-key="title" required></div>
+                        <div class="form-group"><label>Tahun</label><input type="number" data-key="release_year" required></div>
+                        <div class="form-group"><label>ID Genre</label><input type="number" data-key="genre_id"></div>
+                        <div class="form-group"><label>Deskripsi</label><textarea data-key="description" rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-m-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="movies-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/movies.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movies.php', 'PUT', true, 'box-m-put')">
+                        <div class="form-group"><label>ID Film Diubah</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Judul Baru</label><input type="text" data-key="title" required></div>
+                        <div class="form-group"><label>Tahun Baru</label><input type="number" data-key="release_year" required></div>
+                        <div class="form-group"><label>ID Genre Baru</label><input type="number" data-key="genre_id"></div>
+                        <div class="form-group"><label>Deskripsi Baru</label><textarea data-key="description" rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-m-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="movies-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/movies.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movies.php', 'DELETE', true, 'box-m-del')">
+                        <div class="form-group"><label>ID Film</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus Data</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-m-del"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">2. Genres (Kategori)</h2>
+        <div class="endpoint" id="genres-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/genres.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'genres.php', 'GET', true, 'box-g-get-all')">
+                        <div class="form-group"><label>Pencarian</label><input type="text" data-key="search"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-g-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="genres-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/genres.php?id={id}</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'genres.php', 'GET', true, 'box-g-get-id')">
+                        <div class="form-group"><label>ID Genre</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-g-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="genres-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/genres.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'genres.php', 'POST', true, 'box-g-post')">
+                        <div class="form-group"><label>Nama Genre</label><input type="text" data-key="jenis_genre" required></div>
+                        <div class="form-group"><label>Deskripsi</label><textarea data-key="deskripsi" rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-g-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="genres-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/genres.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'genres.php', 'PUT', true, 'box-g-put')">
+                        <div class="form-group"><label>ID Genre</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Nama Genre Baru</label><input type="text" data-key="jenis_genre" required></div>
+                        <div class="form-group"><label>Deskripsi Baru</label><textarea data-key="deskripsi" rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-g-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="genres-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/genres.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'genres.php', 'DELETE', true, 'box-g-del')">
+                        <div class="form-group"><label>ID Genre</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus Data</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-g-del"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">3. Actors (Aktor)</h2>
+        <div class="endpoint" id="actors-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/actors.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'actors.php', 'GET', true, 'box-a-get-all')">
+                        <div class="form-group"><label>Page</label><input type="number" data-key="page" value="1"></div>
+                        <div class="form-group"><label>Limit</label><input type="number" data-key="limit" value="10"></div>
+                        <div class="form-group"><label>Pencarian</label><input type="text" data-key="search"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-a-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="actors-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/actors.php?id={id}</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'actors.php', 'GET', true, 'box-a-get-id')">
+                        <div class="form-group"><label>ID Aktor</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-a-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="actors-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'actors.php', 'POST', true, 'box-a-post')">
+                        <div class="form-group"><label>Nama Aktor</label><input type="text" data-key="actor_name" required></div>
+                        <div class="form-group"><label>Gender</label><select data-key="gender"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-a-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="actors-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'actors.php', 'PUT', true, 'box-a-put')">
+                        <div class="form-group"><label>ID Aktor</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Nama Baru</label><input type="text" data-key="actor_name" required></div>
+                        <div class="form-group"><label>Gender Baru</label><select data-key="gender"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-a-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="actors-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'actors.php', 'DELETE', true, 'box-a-del')">
+                        <div class="form-group"><label>ID Aktor</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus Data</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-a-del"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">4. Casting (Pemeran)</h2>
+        <div class="endpoint" id="cast-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/movie_actors.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movie_actors.php', 'GET', true, 'box-ca-get-all')">
+                        <div class="form-group"><label>Page</label><input type="number" data-key="page" value="1"></div>
+                        <div class="form-group"><label>Filter Movie ID</label><input type="number" data-key="movie_id"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-ca-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="cast-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/movie_actors.php?id={id}</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movie_actors.php', 'GET', true, 'box-ca-get-id')">
+                        <div class="form-group"><label>ID Casting</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-ca-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="cast-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/movie_actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movie_actors.php', 'POST', true, 'box-ca-post')">
+                        <div class="form-group"><label>ID Film</label><input type="number" data-key="movie_id" required></div>
+                        <div class="form-group"><label>ID Aktor</label><input type="number" data-key="actor_id" required></div>
+                        <div class="form-group"><label>Nama Karakter</label><input type="text" data-key="character_name"></div>
+                        <div class="form-group"><label>Role Type</label><input type="text" data-key="role_type" value="Actor"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-ca-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="cast-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/movie_actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movie_actors.php', 'PUT', true, 'box-ca-put')">
+                        <div class="form-group"><label>ID Casting</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Karakter Baru</label><input type="text" data-key="character_name" required></div>
+                        <div class="form-group"><label>Role Type Baru</label><input type="text" data-key="role_type" value="Actor"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-ca-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="cast-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/movie_actors.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'movie_actors.php', 'DELETE', true, 'box-ca-del')">
+                        <div class="form-group"><label>ID Casting</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus Data</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-ca-del"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">5. Reviews (Ulasan)</h2>
+        <div class="endpoint" id="reviews-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/ulasan.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'ulasan.php', 'GET', true, 'box-r-get-all')">
+                        <div class="form-group"><label>Page</label><input type="number" data-key="page" value="1"></div>
+                        <div class="form-group"><label>Filter Movie ID</label><input type="number" data-key="movie_id"></div>
+                        <div class="form-group"><label>Search Judul/User</label><input type="text" data-key="search"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-r-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="reviews-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/ulasan.php?id={id}</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'ulasan.php', 'GET', true, 'box-r-get-id')">
+                        <div class="form-group"><label>ID Ulasan</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-r-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="reviews-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/ulasan.php</span><span class="badge auth">Wajib Login</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'ulasan.php', 'POST', true, 'box-r-post')">
+                        <div class="form-group"><label>ID Film</label><input type="number" data-key="movie_id" required></div>
+                        <div class="form-group"><label>Rating (1-10)</label><input type="number" data-key="score" min="1" max="10" required></div>
+                        <div class="form-group"><label>Komentar</label><textarea data-key="review" required rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Ulasan</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-r-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="reviews-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/ulasan.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'ulasan.php', 'PUT', true, 'box-r-put')">
+                        <div class="form-group"><label>ID Ulasan</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Rating Baru (1-10)</label><input type="number" data-key="score" min="1" max="10" required></div>
+                        <div class="form-group"><label>Komentar Baru</label><textarea data-key="review" required rows="2"></textarea></div>
+                        <button type="submit" class="btn-test">Kirim Ulasan</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-r-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="reviews-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/ulasan.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'ulasan.php', 'DELETE', true, 'box-r-del')">
+                        <div class="form-group"><label>ID Ulasan</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus Ulasan</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-r-del"></code></pre></div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 50px; border-bottom: 1px solid #333; padding-bottom: 10px;">6. Users (Pengguna)</h2>
+        <div class="endpoint" id="users-get-all">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/users.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'users.php', 'GET', true, 'box-u-get-all')">
+                        <div class="form-group"><label>Page</label><input type="number" data-key="page" value="1"></div>
+                        <div class="form-group"><label>Pencarian Nama</label><input type="text" data-key="search"></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-u-get-all"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="users-get-id">
+            <div class="endpoint-header"><span class="method get">GET</span><span class="url">/api/users.php?id={id}</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'users.php', 'GET', true, 'box-u-get-id')">
+                        <div class="form-group"><label>ID User</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-u-get-id"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="users-post">
+            <div class="endpoint-header"><span class="method post">POST</span><span class="url">/api/users.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'users.php', 'POST', true, 'box-u-post')">
+                        <div class="form-group"><label>Nama</label><input type="text" data-key="name" required></div>
+                        <div class="form-group"><label>Email</label><input type="email" data-key="email" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" data-key="password" required></div>
+                        <div class="form-group"><label>Role</label><select data-key="role"><option value="user">User</option><option value="admin">Admin</option></select></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-u-post"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="users-put">
+            <div class="endpoint-header"><span class="method put">PUT</span><span class="url">/api/users.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'users.php', 'PUT', true, 'box-u-put')">
+                        <div class="form-group"><label>ID User</label><input type="number" data-key="id" required></div>
+                        <div class="form-group"><label>Nama Baru</label><input type="text" data-key="name" required></div>
+                        <div class="form-group"><label>Email Baru</label><input type="email" data-key="email" required></div>
+                        <div class="form-group"><label>Role Baru</label><select data-key="role"><option value="user">User</option><option value="admin">Admin</option></select></div>
+                        <button type="submit" class="btn-test">Kirim Request</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-u-put"></code></pre></div>
+            </div>
+        </div>
+        <div class="endpoint" id="users-delete">
+            <div class="endpoint-header"><span class="method delete">DELETE</span><span class="url">/api/users.php</span><span class="badge admin">Admin Only</span></div>
+            <div class="endpoint-body">
+                <div class="panel-left">
+                    <form class="sandbox-form" onsubmit="runTest(event, 'users.php', 'DELETE', true, 'box-u-del')">
+                        <div class="form-group"><label>ID User</label><input type="number" data-key="id" required></div>
+                        <button type="submit" class="btn-test">Hapus User</button>
+                    </form>
+                </div>
+                <div class="panel-right"><pre><code id="box-u-del"></code></pre></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const BASE_API_URL = '../api/';
+        
+        const savedToken = localStorage.getItem('jwt_token');
+        if(savedToken) document.getElementById('global-token').value = savedToken;
+
+        async function runTest(e, endpoint, method, useAuth, outputId) {
+            e.preventDefault();
+            const form = e.target;
+            const outputBox = document.getElementById(outputId);
+            outputBox.innerText = "Connecting to server...";
+
+            let data = {};
+            form.querySelectorAll('[data-key]').forEach(input => {
+                if(input.value !== "") data[input.getAttribute('data-key')] = input.value;
+            });
+
+            let url = BASE_API_URL + endpoint;
+            let options = { method: method, headers: {} };
+
+            if (useAuth) {
+                const token = document.getElementById('global-token').value;
+                if(token) options.headers['Authorization'] = 'Bearer ' + token;
+            }
+
+            if (method === 'GET') {
+                const params = new URLSearchParams(data).toString();
+                if(params) url += '?' + params;
+            } else {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const res = await fetch(url, options);
+                
+                if(res.status === 401) { outputBox.innerText = "❌ Error 401: Unauthorized!\nToken tidak valid."; return; }
+                if(res.status === 403) { outputBox.innerText = "❌ Error 403: Forbidden!\nAkses hanya untuk Admin."; return; }
+
+                const result = await res.json();
+                outputBox.innerText = JSON.stringify(result, null, 2);
+
+                if(endpoint === 'login.php' && result.success && result.token) {
+                    document.getElementById('global-token').value = result.token;
+                    localStorage.setItem('jwt_token', result.token);
+                }
+            } catch (err) { outputBox.innerText = "❌ Gagal terhubung ke server."; }
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

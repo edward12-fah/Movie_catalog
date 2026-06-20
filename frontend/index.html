@@ -107,7 +107,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost/movie_catalog/api/movies.php';
+        const API_URL = '../api/movies.php';
         const token = localStorage.getItem('jwt_token');
         if (!token) window.location.href = 'login.html';
         document.getElementById('user-greeting').innerText = `Hi, ${localStorage.getItem('name')}`;
@@ -195,7 +195,7 @@
                                         <span>${movie.jenis_genre || 'Umum'}</span>
                                     </div>
                                     <p class="hero-desc">${movie.description || 'Tidak ada deskripsi.'}</p>
-                                    <button class="btn-play" onclick="window.location.href='detail.html?id=${movie.id}'">▷ Watch Now</button>
+                                    <button class="btn-play" onclick="window.location.href='detail.html?id=${movie.id}'">▷ See Details</button>
                                 </div>
                             </div>
                         `;

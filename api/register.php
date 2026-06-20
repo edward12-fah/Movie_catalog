@@ -26,9 +26,13 @@ if (isset($input['name']) && isset($input['email']) && isset($input['password'])
     if ($cek_email->num_rows > 0) {
         echo json_encode(["success" => false, "message" => "Email ini sudah terdaftar! Silakan login."]);
     } else {
+        
+        // --- FITUR BARU: Enkripsi Password sebelum disimpan ---
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
         // --- 3. SIMPAN KE DATABASE ---
-        // Perhatikan bagian VALUES: Role dikunci mati secara paksa menjadi 'user'
-        $query = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$password', 'user')";
+        // Perhatikan bagian VALUES: Menggunakan $hashed_password, bukan $password
+        $query = "INSERT INTO users (name, email, password, role) VALUES ('$name', '$email', '$hashed_password', 'user')";
         
         if (mysqli_query($conn, $query)) {
             echo json_encode(["success" => true, "message" => "Pendaftaran berhasil! Mengalihkan ke halaman login..."]);

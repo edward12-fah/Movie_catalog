@@ -265,7 +265,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost/movie_catalog/api/';
+        const API_URL = '../api/';
         const token = localStorage.getItem('jwt_token');
         if (!token || localStorage.getItem('role') !== 'admin') { alert("Akses Ditolak!"); window.location.href = 'index.html'; }
         const authHeaders = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };

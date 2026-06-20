@@ -1,4 +1,8 @@
 <?php
+// Mencegah pesan error PHP merusak format JSON ke frontend
+error_reporting(0);
+ini_set('display_errors', 0);
+
 header("Content-Type: application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: POST");
@@ -18,22 +22,24 @@ if (isset($input['email']) && isset($input['password'])) {
     $email = mysqli_real_escape_string($conn, $input['email']);
     $password = $input['password']; 
     
-    // Asumsi password tidak di-hash (sesuai tahap pembelajaran saat ini)
-    $query = mysqli_query($conn, "SELECT id, name, email, role FROM users WHERE email = '$email' AND password = '$password'");
+    // 1. Ambil data user berdasarkan email SAJA (pastikan kolom password juga ditarik)
+    $query = mysqli_query($conn, "SELECT id, name, email, role, password FROM users WHERE email = '$email'");
     $user = mysqli_fetch_assoc($query);
 
-    if ($user) {
-        // 1. Siapkan isi payload JWT
+    // 2. Gunakan password_verify() untuk mencocokkan input dengan hash di database
+    if ($user && password_verify($password, $user['password'])) {
+        
+        // 3. Siapkan isi payload JWT
         $payload = [
             "user_id" => $user['id'],
             "role" => $user['role'],
             "exp" => time() + 3600 // Token berlaku selama 1 jam
         ];
         
-        // 2. Buat Token
+        // 4. Buat Token
         $jwt = JWT::encode($payload, $secret_key, 'HS256');
         
-        // 3. Kirim respons ke frontend beserta token
+        // 5. Kirim respons ke frontend beserta token
         echo json_encode([
             "success" => true,
             "message" => "Login berhasil",
@@ -44,7 +50,8 @@ if (isset($input['email']) && isset($input['password'])) {
             ]
         ]);
     } else {
-        echo json_encode(["success" => false, "message" => "Kredensial tidak valid"]);
+        // Jika email tidak ada atau password salah
+        echo json_encode(["success" => false, "message" => "Email atau password salah!"]);
     }
 } else {
     echo json_encode(["success" => false, "message" => "Email dan password diperlukan"]);

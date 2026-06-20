@@ -56,7 +56,7 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost/movie_catalog/api/genres.php';
+        const API_URL = '../genres.php';
         const token = localStorage.getItem('jwt_token');
         if (!token) window.location.href = 'login.html';
         document.getElementById('user-greeting').innerText = `Hi, ${localStorage.getItem('name')}`;

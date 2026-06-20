@@ -78,8 +78,8 @@
     </div>
 
     <script>
-        const API_MOVIES = 'http://localhost/movie_catalog/api/movies.php';
-        const API_ACTORS = 'http://localhost/movie_catalog/api/actors.php';
+        const API_MOVIES = '../api/movies.php';
+        const API_ACTORS = '../api/actors.php';
         const token = localStorage.getItem('jwt_token');
         if (!token) window.location.href = 'login.html';
         document.getElementById('user-greeting').innerText = `Hi, ${localStorage.getItem('name')}`;
